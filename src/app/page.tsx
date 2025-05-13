@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react'
 import { MarkdownWrapper } from './_components/MarkdownWrapper'
-import { useEffect, useRef } from 'react'
+import { useAutoFocus } from './_hooks'
 
 export default function Page() {
   const {
@@ -16,11 +16,7 @@ export default function Page() {
     api: '/api/chat',
   })
 
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (inputRef.current) inputRef.current.focus()
-  }, [])
+  const inputRef = useAutoFocus<HTMLInputElement>()
 
   return (
     <div className="flex h-full flex-col max-w-3xl mx-auto py-10">
@@ -51,7 +47,7 @@ export default function Page() {
             <input
               ref={inputRef}
               value={input}
-              placeholder=""
+              placeholder="メッセージを入力してください..."
               onChange={handleInputChange}
               disabled={status !== 'ready' && status !== undefined}
               className="w-full rounded-lg border p-2"
