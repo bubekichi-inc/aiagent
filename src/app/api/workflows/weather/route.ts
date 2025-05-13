@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     ;(async () => {
       const { runId, start } = mastra.getWorkflow('weatherWorkflow').createRun()
       const runResult = await start({
-        triggerData: { city: 'Shibuya' },
+        triggerData: { city: '渋谷' },
       })
       console.log('Final output:', runResult.results)
     })()
