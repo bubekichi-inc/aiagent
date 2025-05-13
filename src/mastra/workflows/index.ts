@@ -66,9 +66,9 @@ const forecastSchema = z.array(
 
 const fetchWeather = new Step({
   id: 'fetch-weather',
-  description: 'Fetches weather forecast for a given city',
+  description: '指定された都市の天気予報を取得します',
   inputSchema: z.object({
-    city: z.string().describe('The city to get the weather for'),
+    city: z.string().describe('天気を取得する都市名'),
   }),
   outputSchema: forecastSchema,
   execute: async ({ context }) => {
