@@ -19,10 +19,7 @@ export default function Page() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    // コンポーネントがマウントされたときにinputにフォーカス
-    if (inputRef.current) {
-      inputRef.current.focus()
-    }
+    if (inputRef.current) inputRef.current.focus()
   }, [])
 
   return (
