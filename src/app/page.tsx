@@ -13,7 +13,7 @@ export default function Page() {
     status,
     stop,
   } = useChat({
-    api: '/api/chat',
+    api: '/api/workflows/weather',
   })
 
   const inputRef = useAutoFocus<HTMLInputElement>()

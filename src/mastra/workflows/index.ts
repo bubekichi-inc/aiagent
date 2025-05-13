@@ -1,57 +1,57 @@
-import { openai } from '@ai-sdk/openai';
-import { Agent } from '@mastra/core/agent';
-import { Step, Workflow } from '@mastra/core/workflows';
-import { z } from 'zod';
+import { openai } from '@ai-sdk/openai'
+import { Agent } from '@mastra/core/agent'
+import { Step, Workflow } from '@mastra/core/workflows'
+import { z } from 'zod'
 
-const llm = openai('gpt-4o');
+const llm = openai('gpt-4o')
 
 const agent = new Agent({
   name: 'Weather Agent',
   model: llm,
   instructions: `
-        You are a local activities and travel expert who excels at weather-based planning. Analyze the weather data and provide practical activity recommendations.
+        あなたは天気に基づいた計画が得意なローカルアクティビティと旅行の専門家です。天気データを分析し、実用的なアクティビティの推奨事項を提供してください。
 
-        For each day in the forecast, structure your response exactly as follows:
+        予報の各日について、以下の形式で回答を構成してください：
 
-        📅 [Day, Month Date, Year]
+        📅 [曜日、月 日付、年]
         ═══════════════════════════
 
-        🌡️ WEATHER SUMMARY
-        • Conditions: [brief description]
-        • Temperature: [X°C/Y°F to A°C/B°F]
-        • Precipitation: [X% chance]
+        🌡️ 天気概要
+        • 状態: [簡単な説明]
+        • 気温: [X°C/Y°F から A°C/B°F]
+        • 降水確率: [X%]
 
-        🌅 MORNING ACTIVITIES
-        Outdoor:
-        • [Activity Name] - [Brief description including specific location/route]
-          Best timing: [specific time range]
-          Note: [relevant weather consideration]
+        🌅 午前のアクティビティ
+        屋外:
+        • [アクティビティ名] - [特定の場所/ルートを含む簡単な説明]
+          最適な時間帯: [具体的な時間帯]
+          注意: [関連する天気の考慮事項]
 
-        🌞 AFTERNOON ACTIVITIES
-        Outdoor:
-        • [Activity Name] - [Brief description including specific location/route]
-          Best timing: [specific time range]
-          Note: [relevant weather consideration]
+        🌞 午後のアクティビティ
+        屋外:
+        • [アクティビティ名] - [特定の場所/ルートを含む簡単な説明]
+          最適な時間帯: [具体的な時間帯]
+          注意: [関連する天気の考慮事項]
 
-        🏠 INDOOR ALTERNATIVES
-        • [Activity Name] - [Brief description including specific venue]
-          Ideal for: [weather condition that would trigger this alternative]
+        🏠 室内の代替案
+        • [アクティビティ名] - [特定の会場を含む簡単な説明]
+          最適な状況: [このアクティビティが推奨される天気状況]
 
-        ⚠️ SPECIAL CONSIDERATIONS
-        • [Any relevant weather warnings, UV index, wind conditions, etc.]
+        ⚠️ 特別な注意事項
+        • [関連する天気警報、UV指数、風の状態など]
 
-        Guidelines:
-        - Suggest 2-3 time-specific outdoor activities per day
-        - Include 1-2 indoor backup options
-        - For precipitation >50%, lead with indoor activities
-        - All activities must be specific to the location
-        - Include specific venues, trails, or locations
-        - Consider activity intensity based on temperature
-        - Keep descriptions concise but informative
+        ガイドライン:
+        - 1日あたり2〜3つの時間指定の屋外アクティビティを提案する
+        - 1〜2つの室内バックアップオプションを含める
+        - 降水確率が50%を超える場合は、室内アクティビティを優先する
+        - すべてのアクティビティはその場所に特化したものであること
+        - 特定の会場、トレイル、または場所を含める
+        - 気温に基づいてアクティビティの強度を考慮する
+        - 説明は簡潔かつ有益であること
 
-        Maintain this exact formatting for consistency, using the emoji and section headers as shown.
+        一貫性のために、絵文字とセクションヘッダーを示されたとおりに使用して、この正確な書式を維持してください。
       `,
-});
+})
 
 const forecastSchema = z.array(
   z.object({
@@ -62,7 +62,7 @@ const forecastSchema = z.array(
     condition: z.string(),
     location: z.string(),
   }),
-);
+)
 
 const fetchWeather = new Step({
   id: 'fetch-weather',
@@ -72,35 +72,37 @@ const fetchWeather = new Step({
   }),
   outputSchema: forecastSchema,
   execute: async ({ context }) => {
-    const triggerData = context?.getStepResult<{ city: string }>('trigger');
+    const triggerData = context?.getStepResult<{ city: string }>('trigger')
 
     if (!triggerData) {
-      throw new Error('Trigger data not found');
+      throw new Error('Trigger data not found')
     }
 
-    const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(triggerData.city)}&count=1`;
-    const geocodingResponse = await fetch(geocodingUrl);
+    const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+      triggerData.city,
+    )}&count=1`
+    const geocodingResponse = await fetch(geocodingUrl)
     const geocodingData = (await geocodingResponse.json()) as {
-      results: { latitude: number; longitude: number; name: string }[];
-    };
+      results: { latitude: number; longitude: number; name: string }[]
+    }
 
     if (!geocodingData.results?.[0]) {
-      throw new Error(`Location '${triggerData.city}' not found`);
+      throw new Error(`Location '${triggerData.city}' not found`)
     }
 
-    const { latitude, longitude, name } = geocodingData.results[0];
+    const { latitude, longitude, name } = geocodingData.results[0]
 
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_mean,weathercode&timezone=auto`;
-    const response = await fetch(weatherUrl);
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_mean,weathercode&timezone=auto`
+    const response = await fetch(weatherUrl)
     const data = (await response.json()) as {
       daily: {
-        time: string[];
-        temperature_2m_max: number[];
-        temperature_2m_min: number[];
-        precipitation_probability_mean: number[];
-        weathercode: number[];
-      };
-    };
+        time: string[]
+        temperature_2m_max: number[]
+        temperature_2m_min: number[]
+        precipitation_probability_mean: number[]
+        weathercode: number[]
+      }
+    }
 
     const forecast = data.daily.time.map((date: string, index: number) => ({
       date,
@@ -109,66 +111,68 @@ const fetchWeather = new Step({
       precipitationChance: data.daily.precipitation_probability_mean[index],
       condition: getWeatherCondition(data.daily.weathercode[index]!),
       location: name,
-    }));
+    }))
 
-    return forecast;
+    return forecast
   },
-});
+})
 
 const planActivities = new Step({
   id: 'plan-activities',
   description: 'Suggests activities based on weather conditions',
   execute: async ({ context, mastra }) => {
-    const forecast = context?.getStepResult(fetchWeather);
+    const forecast = context?.getStepResult(fetchWeather)
 
     if (!forecast || forecast.length === 0) {
-      throw new Error('Forecast data not found');
+      throw new Error('Forecast data not found')
     }
 
-    const prompt = `Based on the following weather forecast for ${forecast[0]?.location}, suggest appropriate activities:
+    const prompt = `Based on the following weather forecast for ${
+      forecast[0]?.location
+    }, suggest appropriate activities:
       ${JSON.stringify(forecast, null, 2)}
-      `;
+      `
 
     const response = await agent.stream([
       {
         role: 'user',
         content: prompt,
       },
-    ]);
+    ])
 
-    let activitiesText = '';
+    let activitiesText = ''
 
     for await (const chunk of response.textStream) {
-      process.stdout.write(chunk);
-      activitiesText += chunk;
+      process.stdout.write(chunk)
+      activitiesText += chunk
     }
 
     return {
       activities: activitiesText,
-    };
+    }
   },
-});
+})
 
 function getWeatherCondition(code: number): string {
   const conditions: Record<number, string> = {
-    0: 'Clear sky',
-    1: 'Mainly clear',
-    2: 'Partly cloudy',
-    3: 'Overcast',
-    45: 'Foggy',
-    48: 'Depositing rime fog',
-    51: 'Light drizzle',
-    53: 'Moderate drizzle',
-    55: 'Dense drizzle',
-    61: 'Slight rain',
-    63: 'Moderate rain',
-    65: 'Heavy rain',
-    71: 'Slight snow fall',
-    73: 'Moderate snow fall',
-    75: 'Heavy snow fall',
-    95: 'Thunderstorm',
-  };
-  return conditions[code] || 'Unknown';
+    0: '快晴',
+    1: 'おおむね晴れ',
+    2: '部分的に曇り',
+    3: '曇天',
+    45: '霧',
+    48: '着氷性の霧',
+    51: '軽い霧雨',
+    53: '中程度の霧雨',
+    55: '強い霧雨',
+    61: '小雨',
+    63: '中程度の雨',
+    65: '大雨',
+    71: '小雪',
+    73: '中程度の雪',
+    75: '大雪',
+    95: '雷雨',
+  }
+  return conditions[code] || 'Unknown'
 }
 
 const weatherWorkflow = new Workflow({
@@ -178,8 +182,8 @@ const weatherWorkflow = new Workflow({
   }),
 })
   .step(fetchWeather)
-  .then(planActivities);
+  .then(planActivities)
 
-weatherWorkflow.commit();
+weatherWorkflow.commit()
 
-export { weatherWorkflow };
+export { weatherWorkflow }
